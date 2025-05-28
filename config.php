@@ -1,4 +1,7 @@
 <?php
+// Definir fuso horário brasileiro
+date_default_timezone_set('America/Sao_Paulo');
+
 $host = 'localhost';
 $dbname = 'controle_op';
 $username = 'root';

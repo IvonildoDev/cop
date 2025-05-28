@@ -1,4 +1,7 @@
 <?php
+// Definir o fuso horário para Brasil/Brasília no início do arquivo
+date_default_timezone_set('America/Sao_Paulo');
+
 require_once 'vendor/autoload.php';
 require_once 'config.php';
 
@@ -102,7 +105,9 @@ try {
         $pdf->Cell(0, 10, 'Operação: ' . $op['nome_op_aux'], 0, 1);
         $pdf->SetFont('helvetica', '', 10);
 
-        $pdf->Cell(0, 6, 'Início: ' . $op['inicio_operacao'], 0, 1);
+        // Formatação correta da data de início com fuso horário local
+        $inicio_data = new DateTime($op['inicio_operacao']);
+        $pdf->Cell(0, 6, 'Início: ' . $inicio_data->format('d/m/Y H:i'), 0, 1);
         $pdf->Cell(0, 6, 'KM Inicial: ' . $op['km_inicial'], 0, 1);
         $pdf->Cell(0, 6, 'Tipo de Operação: ' . $op['tipo_operacao'], 0, 1);
         $pdf->Cell(0, 6, 'Cidade: ' . $op['nome_cidade'], 0, 1);
@@ -113,11 +118,16 @@ try {
         $pdf->Cell(0, 6, 'Pressão (PSI/KGF): ' . $op['pressao'], 0, 1);
 
         // Handle potentially long description text
-        $pdf->MultiCell(0, 6, 'Descrição: ' . $op['descricao_atividades'], 0, 'L');
+        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->Cell(0, 6, 'Descrição das Atividades:', 0, 1);
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->MultiCell(0, 6, $op['descricao_atividades'], 0, 'L');
+        $pdf->Ln(2);
 
         // Show end time and final km if available
         if (!empty($op['fim_operacao'])) {
-            $pdf->Cell(0, 6, 'Fim: ' . $op['fim_operacao'], 0, 1);
+            $fim_data = new DateTime($op['fim_operacao']);
+            $pdf->Cell(0, 6, 'Fim: ' . $fim_data->format('d/m/Y H:i'), 0, 1);
         }
         if (!empty($op['km_final'])) {
             $pdf->Cell(0, 6, 'KM Final: ' . $op['km_final'], 0, 1);
@@ -289,6 +299,176 @@ try {
 } catch (PDOException $e) {
     $pdf->SetFont('helvetica', 'B', 12);
     $pdf->Cell(0, 10, 'Erro ao carregar dados de abastecimento: ' . $e->getMessage(), 0, 1);
+}
+
+// ----- MOBILIZAÇÕES -----
+if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'mobilizacoes') {
+    // Verificar se precisa adicionar uma nova página
+    if ($pdf->getY() > 180 && $tipoRelatorio == 'todos') {
+        $pdf->AddPage();
+    }
+
+    $pdf->SetFont('helvetica', 'B', 14);
+    $pdf->Cell(0, 10, '6. MOBILIZAÇÕES', 0, 1, 'L');
+
+    if (count($mobilizacoes) > 0) {
+        $pdf->SetFont('helvetica', '', 10);
+
+        foreach ($mobilizacoes as $index => $mob) {
+            $pdf->SetFillColor(245, 245, 245);
+            $pdf->Cell(0, 8, 'Mobilização #' . ($index + 1), 1, 1, 'L', true);
+
+            $pdf->Cell(40, 6, 'Início:', 1, 0, 'L');
+            $pdf->Cell(0, 6, date('d/m/Y H:i', strtotime($mob['inicio_mobilizacao'])), 1, 1, 'L');
+
+            $pdf->Cell(40, 6, 'Local:', 1, 0, 'L');
+            $pdf->Cell(0, 6, $mob['local_mobilizacao'], 1, 1, 'L');
+
+            $pdf->Cell(40, 6, 'Fim:', 1, 0, 'L');
+            $pdf->Cell(0, 6, !empty($mob['fim_mobilizacao']) ? date('d/m/Y H:i', strtotime($mob['fim_mobilizacao'])) : 'Em andamento', 1, 1, 'L');
+
+            $pdf->Cell(40, 6, 'Duração:', 1, 0, 'L');
+            if (!empty($mob['duracao_segundos'])) {
+                $horas = floor($mob['duracao_segundos'] / 3600);
+                $minutos = floor(($mob['duracao_segundos'] % 3600) / 60);
+                $pdf->Cell(0, 6, sprintf("%02d:%02d", $horas, $minutos), 1, 1, 'L');
+            } else {
+                $pdf->Cell(0, 6, '-', 1, 1, 'L');
+            }
+
+            $pdf->Cell(40, 6, 'Status:', 1, 0, 'L');
+            $pdf->Cell(0, 6, $mob['status'], 1, 1, 'L');
+
+            $pdf->Ln(5);
+        }
+    } else {
+        $pdf->SetFont('helvetica', 'I', 10);
+        $pdf->Cell(0, 10, 'Nenhuma mobilização registrada no período selecionado.', 0, 1);
+    }
+
+    $pdf->Ln(5);
+}
+
+// ----- DESMOBILIZAÇÕES -----
+if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'desmobilizacoes') {
+    // Verificar se precisa adicionar uma nova página
+    if ($pdf->getY() > 180 && $tipoRelatorio == 'todos') {
+        $pdf->AddPage();
+    }
+
+    $pdf->SetFont('helvetica', 'B', 14);
+    $pdf->Cell(0, 10, '7. DESMOBILIZAÇÕES', 0, 1, 'L');
+
+    if (count($desmobilizacoes) > 0) {
+        $pdf->SetFont('helvetica', '', 10);
+
+        foreach ($desmobilizacoes as $index => $desmob) {
+            $pdf->SetFillColor(245, 245, 245);
+            $pdf->Cell(0, 8, 'Desmobilização #' . ($index + 1), 1, 1, 'L', true);
+
+            $pdf->Cell(40, 6, 'Início:', 1, 0, 'L');
+            $pdf->Cell(0, 6, date('d/m/Y H:i', strtotime($desmob['inicio_desmobilizacao'])), 1, 1, 'L');
+
+            $pdf->Cell(40, 6, 'Local:', 1, 0, 'L');
+            $pdf->Cell(0, 6, $desmob['local_desmobilizacao'], 1, 1, 'L');
+
+            $pdf->Cell(40, 6, 'Fim:', 1, 0, 'L');
+            $pdf->Cell(0, 6, !empty($desmob['fim_desmobilizacao']) ? date('d/m/Y H:i', strtotime($desmob['fim_desmobilizacao'])) : 'Em andamento', 1, 1, 'L');
+
+            $pdf->Cell(40, 6, 'Duração:', 1, 0, 'L');
+            if (!empty($desmob['duracao_segundos'])) {
+                $horas = floor($desmob['duracao_segundos'] / 3600);
+                $minutos = floor(($desmob['duracao_segundos'] % 3600) / 60);
+                $pdf->Cell(0, 6, sprintf("%02d:%02d", $horas, $minutos), 1, 1, 'L');
+            } else {
+                $pdf->Cell(0, 6, '-', 1, 1, 'L');
+            }
+
+            $pdf->Cell(40, 6, 'Status:', 1, 0, 'L');
+            $pdf->Cell(0, 6, $desmob['status'], 1, 1, 'L');
+
+            $pdf->Ln(5);
+        }
+    } else {
+        $pdf->SetFont('helvetica', 'I', 10);
+        $pdf->Cell(0, 10, 'Nenhuma desmobilização registrada no período selecionado.', 0, 1);
+    }
+}
+
+// ----- ESTATÍSTICAS -----
+$pdf->AddPage();
+$pdf->SetFont('helvetica', 'B', 14);
+$pdf->Cell(0, 10, '8. ESTATÍSTICAS GERAIS', 0, 1, 'L');
+$pdf->Ln(10);
+
+// Estatísticas de operações
+$pdf->SetFont('helvetica', 'B', 12);
+$pdf->Cell(0, 7, 'Operações', 1, 1, 'L', true);
+$pdf->SetFont('helvetica', '', 10);
+
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) as total_operacoes, SUM(volume_bbl) as total_volume FROM operacoes");
+    $estatisticas = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $pdf->Cell(100, 6, 'Total de operações:', 1, 0, 'L');
+    $pdf->Cell(0, 6, $estatisticas['total_operacoes'], 1, 1, 'L');
+    $pdf->Cell(100, 6, 'Total de volume (bbl):', 1, 0, 'L');
+    $pdf->Cell(0, 6, number_format($estatisticas['total_volume'], 2, ',', '.'), 1, 1, 'L');
+} catch (PDOException $e) {
+    $pdf->Cell(0, 6, 'Erro ao carregar estatísticas: ' . $e->getMessage(), 1, 1, 'L');
+}
+
+// Estatísticas de deslocamentos
+$pdf->Cell(0, 7, 'Deslocamentos', 1, 1, 'L', true);
+$pdf->Cell(100, 6, 'Total de deslocamentos:', 1, 0, 'L');
+$pdf->Cell(0, 6, count($deslocamentos), 1, 1, 'L');
+
+if (count($deslocamentos) > 0) {
+    $distanciaTotal = 0;
+    foreach ($deslocamentos as $deslocamento) {
+        if (!empty($deslocamento['km_final']) && !empty($deslocamento['km_inicial'])) {
+            $distanciaTotal += $deslocamento['km_final'] - $deslocamento['km_inicial'];
+        }
+    }
+    $pdf->Cell(100, 6, 'Distância total percorrida:', 1, 0, 'L');
+    $pdf->Cell(0, 6, number_format($distanciaTotal, 1, ',', '.') . ' km', 1, 1, 'L');
+}
+
+$pdf->Cell(0, 7, 'Mobilizações', 1, 1, 'L', true);
+$pdf->Cell(100, 6, 'Total de mobilizações:', 1, 0, 'L');
+$pdf->Cell(0, 6, count($mobilizacoes), 1, 1, 'L');
+
+if (count($mobilizacoes) > 0) {
+    $tempoTotalMobilizacoes = 0;
+    foreach ($mobilizacoes as $mob) {
+        if (!empty($mob['duracao_segundos'])) {
+            $tempoTotalMobilizacoes += $mob['duracao_segundos'];
+        }
+    }
+    $horasMob = floor($tempoTotalMobilizacoes / 3600);
+    $minutosMob = floor(($tempoTotalMobilizacoes % 3600) / 60);
+
+    $pdf->Cell(100, 6, 'Tempo total em mobilização:', 1, 0, 'L');
+    $pdf->Cell(0, 6, sprintf("%02d:%02d", $horasMob, $minutosMob), 1, 1, 'L');
+}
+
+// Estatísticas de desmobilizações
+$pdf->Cell(0, 7, 'Desmobilizações', 1, 1, 'L', true);
+$pdf->Cell(100, 6, 'Total de desmobilizações:', 1, 0, 'L');
+$pdf->Cell(0, 6, count($desmobilizacoes), 1, 1, 'L');
+
+if (count($desmobilizacoes) > 0) {
+    $tempoTotalDesmobilizacoes = 0;
+    foreach ($desmobilizacoes as $desmob) {
+        if (!empty($desmob['duracao_segundos'])) {
+            $tempoTotalDesmobilizacoes += $desmob['duracao_segundos'];
+        }
+    }
+    $horasDesmob = floor($tempoTotalDesmobilizacoes / 3600);
+    $minutosDesmob = floor(($tempoTotalDesmobilizacoes % 3600) / 60);
+
+    $pdf->Cell(100, 6, 'Tempo total em desmobilização:', 1, 0, 'L');
+    $pdf->Cell(0, 6, sprintf("%02d:%02d", $horasDesmob, $minutosDesmob), 1, 1, 'L');
 }
 
 // Output the PDF

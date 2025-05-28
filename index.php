@@ -287,7 +287,9 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
             <div class="bar"></div>
         </div>
         <ul class="nav-menu">
-            <li><a href="index.php"><i class="fas fa-home"></i>Operação</a></li>
+            <li><a href="index.php" class="active"><i class="fas fa-home"></i> Operação</a></li>
+            <li><a href="mobilizacao.php"><i class="fas fa-truck-loading"></i> Mobilização</a></li>
+            <li><a href="desmobilizacao.php"><i class="fas fa-truck"></i> Desmobilização</a></li>
             <li><a href="deslocamento.php"><i class="fas fa-route"></i> Deslocamento</a></li>
             <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
             <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
@@ -325,27 +327,6 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
         </div>
 
         <form id="operacaoForm" action="save_operation.php" method="POST">
-            <!-- Controle de Mobilização e Desmobilização -->
-            <div class="mobilizacao-container">
-                <!-- Mobilização -->
-                <div class="mobilizacao-grupo">
-                    <div class="mobilizacao-titulo">Mobilização do Equipamento</div>
-                    <div class="mobilizacao-botoes">
-                        <button type="button" id="inicioMobilizacao" class="btn-mobilizacao iniciar">
-                            <i class="fas fa-play"></i> Início Mobilização
-                        </button>
-                        <button type="button" id="fimMobilizacao" class="btn-mobilizacao finalizar" disabled>
-                            <i class="fas fa-flag-checkered"></i> Finalizar Mobilização
-                        </button>
-                    </div>
-                    <div class="mobilizacao-status">
-                        <i id="statusMobilizacaoIcon" class="fas fa-clock status-aguardando"></i>
-                        <span id="statusMobilizacao" class="mobilizacao-status-texto">Aguardando início da mobilização</span>
-                    </div>
-                    <div id="tempoMobilizacao" class="mobilizacao-tempo"></div>
-                </div>
-            </div>
-
             <!-- Tempo de operação modificado - apenas botões de início e fim -->
             <div class="tempo-operacao">
                 <div class="tempo-grupo">
@@ -359,8 +340,8 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
                 </div>
             </div>
 
-            <!-- <label for="nomeOpAux">Nome OP/Aux:</label>
-            <input type="text" id="nomeOpAux" name="nomeOpAux" required> -->
+            <!-- Adicione logo após o botão "Início Operação" e antes do campo "tipoOperacao" -->
+            <input type="hidden" id="nomeOpAux" name="nomeOpAux" value="<?php echo htmlspecialchars($config['nome_operador_principal'] . ' / ' . $config['nome_auxiliar']); ?>">
 
             <label for="tipoOperacao">Tipo de Operação:</label>
             <input type="text" id="tipoOperacao" name="tipoOperacao" required>
@@ -409,40 +390,6 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
             <button type="submit" class="btn-mobilizacao finalizar">
                 <i class="fas fa-save"></i> Salvar Operação
             </button>
-
-            <!-- Desmobilização (movida para antes do botão Salvar) -->
-            <div class="mobilizacao-container">
-                <div class="mobilizacao-grupo">
-                    <div class="mobilizacao-titulo">Desmobilização do Equipamento</div>
-                    <div class="mobilizacao-botoes">
-                        <button type="button" id="inicioDesmobilizacao" class="btn-mobilizacao iniciar" disabled>
-                            <i class="fas fa-play"></i> Início Desmobilização
-                        </button>
-                        <button type="button" id="fimDesmobilizacao" class="btn-mobilizacao finalizar" disabled>
-                            <i class="fas fa-flag-checkered"></i> Finalizar Desmobilização
-                        </button>
-                    </div>
-                    <div class="mobilizacao-status">
-                        <i id="statusDesmobilizacaoIcon" class="fas fa-clock status-aguardando"></i>
-                        <span id="statusDesmobilizacao" class="mobilizacao-status-texto">Aguardando início da desmobilização</span>
-                    </div>
-                    <div id="tempoDesmobilizacao" class="mobilizacao-tempo"></div>
-                </div>
-            </div>
-
-            <!-- Campos ocultos para registrar os tempos -->
-            <input type="hidden" id="inicioMobilizacaoTimestamp" name="inicioMobilizacaoTimestamp">
-            <input type="hidden" id="fimMobilizacaoTimestamp" name="fimMobilizacaoTimestamp">
-            <input type="hidden" id="inicioDesmobilizacaoTimestamp" name="inicioDesmobilizacaoTimestamp">
-            <input type="hidden" id="fimDesmobilizacaoTimestamp" name="fimDesmobilizacaoTimestamp">
-            <input type="hidden" id="mobilizacaoInicio" name="mobilizacaoInicio">
-            <input type="hidden" id="mobilizacaoFim" name="mobilizacaoFim">
-            <input type="hidden" id="desmobilizacaoInicio" name="desmobilizacaoInicio">
-            <input type="hidden" id="desmobilizacaoFim" name="desmobilizacaoFim">
-            <input type="hidden" id="mobilizacaoStatus" name="mobilizacaoStatus" value="Não iniciada">
-            <input type="hidden" id="desmobilizacaoStatus" name="desmobilizacaoStatus" value="Não iniciada">
-
-
         </form>
 
         <h2>Histórico de Operações</h2>
@@ -511,187 +458,6 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
             this.innerHTML = '<i class="fas fa-check-circle"></i> Operação Iniciada';
             this.classList.remove('iniciar');
             this.classList.add('finalizar');
-        });
-
-        // Validação para aceitar apenas números e ponto decimal nos campos numéricos
-        const camposNumericos = ['volumeBbl', 'temperatura', 'pressao'];
-
-        camposNumericos.forEach(campo => {
-            const elemento = document.getElementById(campo);
-
-            // Adicionar atributos para melhorar a UX em dispositivos móveis
-            elemento.setAttribute('inputmode', 'decimal');
-
-            // Validação durante digitação
-            elemento.addEventListener('input', function(e) {
-                // Remove qualquer caracter que não seja número ou ponto decimal
-                this.value = this.value.replace(/[^0-9.]/g, '');
-
-                // Garante que não tenha mais de um ponto decimal
-                const pontos = this.value.split('.').length - 1;
-                if (pontos > 1) {
-                    this.value = this.value.slice(0, this.value.lastIndexOf('.'));
-                }
-            });
-
-            // Validação ao perder o foco
-            elemento.addEventListener('blur', function() {
-                // Se acabou com um ponto no final, remova-o
-                if (this.value.endsWith('.')) {
-                    this.value = this.value.slice(0, -1);
-                }
-
-                // Se estiver vazio, substitua por zero (opcional)
-                if (this.value === '') {
-                    this.value = '0';
-                }
-
-                // Formata o número com duas casas decimais (opcional)
-                // this.value = parseFloat(this.value).toFixed(2);
-            });
-        });
-
-        // Botão Salvar Operação (funciona como fim da operação)
-        document.getElementById('operacaoForm').addEventListener('submit', function(e) {
-            // Se o campo de início não foi preenchido, interromper o envio
-            if (!document.getElementById('inicioOperacao').value) {
-                e.preventDefault();
-                alert('É necessário marcar o início da operação primeiro.');
-                return false;
-            }
-
-            // Capturar a cidade correta antes de submeter
-            const cidadeSelect = document.getElementById('nomeCidade');
-            if (cidadeSelect.value === 'outra') {
-                const outraCidade = document.getElementById('outraCidade').value.trim();
-                if (outraCidade === '') {
-                    e.preventDefault();
-                    alert('Por favor, digite o nome da outra cidade.');
-                    return false;
-                }
-
-                // Criar um campo oculto para enviar o valor real da cidade
-                const hiddenCidade = document.createElement('input');
-                hiddenCidade.type = 'hidden';
-                hiddenCidade.name = 'nomeCidade';
-                hiddenCidade.value = outraCidade;
-
-                // Remover o valor do select para evitar duplicação
-                cidadeSelect.removeAttribute('name');
-
-                // Adicionar o campo oculto ao formulário
-                this.appendChild(hiddenCidade);
-            }
-
-            // Validar campos numéricos antes do envio
-            for (const campo of camposNumericos) {
-                const elemento = document.getElementById(campo);
-                if (elemento.value === '' || isNaN(parseFloat(elemento.value))) {
-                    e.preventDefault();
-                    alert(`O campo ${elemento.previousElementSibling.textContent.trim()} deve conter um valor numérico.`);
-                    elemento.focus();
-                    return false;
-                }
-            }
-
-            // Registrar o horário de fim da operação automaticamente
-            const now = new Date();
-            const formattedDate = now.toISOString().slice(0, 16);
-            document.getElementById('fimOperacao').value = formattedDate;
-
-            // Continuar com o envio normal do formulário
-            return true;
-        });
-
-        // Controle de mobilização
-        document.getElementById('inicioMobilizacao').addEventListener('click', function() {
-            // Registrar o início da mobilização
-            const now = new Date();
-            document.getElementById('inicioMobilizacaoTimestamp').value = now.toISOString();
-            document.getElementById('mobilizacaoInicio').value = now.toISOString();
-
-            // Atualizar interface
-            this.disabled = true;
-            document.getElementById('fimMobilizacao').disabled = false;
-
-            const statusIcon = document.getElementById('statusMobilizacaoIcon');
-            const statusText = document.getElementById('statusMobilizacao');
-            statusIcon.className = 'fas fa-cog fa-spin status-ativo';
-            statusText.textContent = 'Equipe em montagem do equipamento';
-
-            // Iniciar o cronômetro
-            timerMobilizacao = setInterval(function() {
-                segundosMobilizacao++;
-                document.getElementById('tempoMobilizacao').textContent = 'Tempo: ' + formatarTempo(segundosMobilizacao);
-            }, 1000);
-
-            document.getElementById('mobilizacaoStatus').value = 'Em andamento';
-        });
-
-        document.getElementById('fimMobilizacao').addEventListener('click', function() {
-            // Registrar o fim da mobilização
-            const now = new Date();
-            document.getElementById('fimMobilizacaoTimestamp').value = now.toISOString();
-            document.getElementById('mobilizacaoFim').value = now.toISOString();
-
-            // Atualizar interface
-            this.disabled = true;
-            document.getElementById('inicioDesmobilizacao').disabled = false;
-
-            // Parar o cronômetro
-            clearInterval(timerMobilizacao);
-
-            const statusIcon = document.getElementById('statusMobilizacaoIcon');
-            const statusText = document.getElementById('statusMobilizacao');
-            statusIcon.className = 'fas fa-check-circle status-concluido';
-            statusText.textContent = 'Montagem do equipamento concluída';
-
-            document.getElementById('mobilizacaoStatus').value = 'Concluída';
-        });
-
-        // Controle de desmobilização
-        document.getElementById('inicioDesmobilizacao').addEventListener('click', function() {
-            // Registrar o início da desmobilização
-            const now = new Date();
-            document.getElementById('inicioDesmobilizacaoTimestamp').value = now.toISOString();
-            document.getElementById('desmobilizacaoInicio').value = now.toISOString();
-
-            // Atualizar interface
-            this.disabled = true;
-            document.getElementById('fimDesmobilizacao').disabled = false;
-
-            const statusIcon = document.getElementById('statusDesmobilizacaoIcon');
-            const statusText = document.getElementById('statusDesmobilizacao');
-            statusIcon.className = 'fas fa-cog fa-spin status-ativo';
-            statusText.textContent = 'Equipe em desmontagem do equipamento';
-
-            // Iniciar o cronômetro
-            timerDesmobilizacao = setInterval(function() {
-                segundosDesmobilizacao++;
-                document.getElementById('tempoDesmobilizacao').textContent = 'Tempo: ' + formatarTempo(segundosDesmobilizacao);
-            }, 1000);
-
-            document.getElementById('desmobilizacaoStatus').value = 'Em andamento';
-        });
-
-        document.getElementById('fimDesmobilizacao').addEventListener('click', function() {
-            // Registrar o fim da desmobilização
-            const now = new Date();
-            document.getElementById('fimDesmobilizacaoTimestamp').value = now.toISOString();
-            document.getElementById('desmobilizacaoFim').value = now.toISOString();
-
-            // Atualizar interface
-            this.disabled = true;
-
-            // Parar o cronômetro
-            clearInterval(timerDesmobilizacao);
-
-            const statusIcon = document.getElementById('statusDesmobilizacaoIcon');
-            const statusText = document.getElementById('statusDesmobilizacao');
-            statusIcon.className = 'fas fa-check-circle status-concluido';
-            statusText.textContent = 'Desmontagem do equipamento concluída';
-
-            document.getElementById('desmobilizacaoStatus').value = 'Concluída';
         });
 
         document.querySelector('.hamburger').addEventListener('click', function() {

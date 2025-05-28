@@ -322,10 +322,12 @@ $error = isset($error) ? $error : (isset($_GET['error']) ? htmlspecialchars($_GE
             <div class="bar"></div>
         </div>
         <ul class="nav-menu">
-            <li><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="index.php" class="active"><i class="fas fa-home"></i> Operação</a></li>
+            <li><a href="mobilizacao.php"><i class="fas fa-truck-loading"></i> Mobilização</a></li>
+            <li><a href="desmobilizacao.php"><i class="fas fa-truck"></i> Desmobilização</a></li>
             <li><a href="deslocamento.php"><i class="fas fa-route"></i> Deslocamento</a></li>
             <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
-            <!-- <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li> -->
+            <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
             <li><a href="refeicao.php"><i class="fas fa-utensils"></i> Refeições</a></li>
             <li><a href="relatorio.php"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
             <li><a href="config_inicial.php"><i class="fas fa-cog"></i> Configurações</a></li>

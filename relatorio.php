@@ -96,6 +96,28 @@ if ($formSubmitted) {
             error_log("Erro ao buscar refeições: " . $e->getMessage());
             $refeicoes = [];
         }
+
+        // Consulta de Mobilizações
+        try {
+            $sql = "SELECT * FROM mobilizacoes" . $dateFilter . "ORDER BY inicio_mobilizacao DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $mobilizacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Erro ao buscar mobilizações: " . $e->getMessage());
+            $mobilizacoes = [];
+        }
+
+        // Consulta de Desmobilizações
+        try {
+            $sql = "SELECT * FROM desmobilizacoes" . $dateFilter . "ORDER BY inicio_desmobilizacao DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $desmobilizacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Erro ao buscar desmobilizações: " . $e->getMessage());
+            $desmobilizacoes = [];
+        }
     } else {
         // Para tipos específicos, carregamos apenas o tipo selecionado
         switch ($tipoRelatorio) {
@@ -151,6 +173,28 @@ if ($formSubmitted) {
                     $refeicoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 } catch (PDOException $e) {
                     $error = "Erro ao buscar refeições: " . $e->getMessage();
+                }
+                break;
+
+            case 'mobilizacoes':
+                try {
+                    $sql = "SELECT * FROM mobilizacoes" . $dateFilter . "ORDER BY inicio_mobilizacao DESC";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($params);
+                    $mobilizacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } catch (PDOException $e) {
+                    $error = "Erro ao buscar mobilizações: " . $e->getMessage();
+                }
+                break;
+
+            case 'desmobilizacoes':
+                try {
+                    $sql = "SELECT * FROM desmobilizacoes" . $dateFilter . "ORDER BY inicio_desmobilizacao DESC";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($params);
+                    $desmobilizacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } catch (PDOException $e) {
+                    $error = "Erro ao buscar desmobilizações: " . $e->getMessage();
                 }
                 break;
         }
@@ -699,13 +743,15 @@ if ($exportPDF) {
 
                 <div class="form-group">
                     <label for="tipo_relatorio">Tipo de Relatório:</label>
-                    <select id="tipo_relatorio" name="tipo_relatorio">
-                        <option value="todos" <?php echo ($tipoRelatorio == 'todos') ? 'selected' : ''; ?>>Todos</option>
-                        <option value="operacoes" <?php echo ($tipoRelatorio == 'operacoes') ? 'selected' : ''; ?>>Operações</option>
-                        <option value="deslocamentos" <?php echo ($tipoRelatorio == 'deslocamentos') ? 'selected' : ''; ?>>Deslocamentos</option>
-                        <option value="aguardos" <?php echo ($tipoRelatorio == 'aguardos') ? 'selected' : ''; ?>>Aguardos</option>
-                        <option value="abastecimentos" <?php echo ($tipoRelatorio == 'abastecimentos') ? 'selected' : ''; ?>>Abastecimentos</option>
-                        <option value="refeicoes" <?php echo ($tipoRelatorio == 'refeicoes') ? 'selected' : ''; ?>>Refeições</option>
+                    <select class="form-control" name="tipo_relatorio" id="tipo_relatorio">
+                        <option value="todos" <?php echo $tipoRelatorio == 'todos' ? 'selected' : ''; ?>>Todos</option>
+                        <option value="operacoes" <?php echo $tipoRelatorio == 'operacoes' ? 'selected' : ''; ?>>Operações</option>
+                        <option value="deslocamentos" <?php echo $tipoRelatorio == 'deslocamentos' ? 'selected' : ''; ?>>Deslocamentos</option>
+                        <option value="aguardos" <?php echo $tipoRelatorio == 'aguardos' ? 'selected' : ''; ?>>Aguardos</option>
+                        <option value="abastecimentos" <?php echo $tipoRelatorio == 'abastecimentos' ? 'selected' : ''; ?>>Abastecimentos</option>
+                        <option value="refeicoes" <?php echo $tipoRelatorio == 'refeicoes' ? 'selected' : ''; ?>>Refeições</option>
+                        <option value="mobilizacoes" <?php echo $tipoRelatorio == 'mobilizacoes' ? 'selected' : ''; ?>>Mobilizações</option>
+                        <option value="desmobilizacoes" <?php echo $tipoRelatorio == 'desmobilizacoes' ? 'selected' : ''; ?>>Desmobilizações</option>
                     </select>
                 </div>
             </div>
@@ -1005,10 +1051,105 @@ if ($exportPDF) {
                         </table>
                     </div>
                 <?php else: ?>
-                    <p class="alert info">Nenhuma refeição encontrada no período selecionado.</p>
+                    <p class="alert info">Nenhuma refeição registrada no período selecionado.</p>
                 <?php endif; ?>
             <?php endif; ?>
 
+            <?php if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'mobilizacoes'): ?>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Mobilizações</h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($mobilizacoes)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Data/Hora Início</th>
+                                            <th>Local</th>
+                                            <th>Data/Hora Fim</th>
+                                            <th>Duração</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($mobilizacoes as $mob): ?>
+                                            <tr>
+                                                <td><?php echo date('d/m/Y H:i', strtotime($mob['inicio_mobilizacao'])); ?></td>
+                                                <td><?php echo htmlspecialchars($mob['local_mobilizacao']); ?></td>
+                                                <td><?php echo !empty($mob['fim_mobilizacao']) ? date('d/m/Y H:i', strtotime($mob['fim_mobilizacao'])) : 'Em andamento'; ?></td>
+                                                <td>
+                                                    <?php if (!empty($mob['duracao_segundos'])): ?>
+                                                        <?php
+                                                        $horas = floor($mob['duracao_segundos'] / 3600);
+                                                        $minutos = floor(($mob['duracao_segundos'] % 3600) / 60);
+                                                        echo sprintf("%02d:%02d", $horas, $minutos);
+                                                        ?>
+                                                    <?php else: ?>
+                                                        -
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?php echo htmlspecialchars($mob['status']); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted">Nenhuma mobilização encontrada no período selecionado.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'desmobilizacoes'): ?>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Desmobilizações</h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($desmobilizacoes)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Data/Hora Início</th>
+                                            <th>Local</th>
+                                            <th>Data/Hora Fim</th>
+                                            <th>Duração</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($desmobilizacoes as $desmob): ?>
+                                            <tr>
+                                                <td><?php echo date('d/m/Y H:i', strtotime($desmob['inicio_desmobilizacao'])); ?></td>
+                                                <td><?php echo htmlspecialchars($desmob['local_desmobilizacao']); ?></td>
+                                                <td><?php echo !empty($desmob['fim_desmobilizacao']) ? date('d/m/Y H:i', strtotime($desmob['fim_desmobilizacao'])) : 'Em andamento'; ?></td>
+                                                <td>
+                                                    <?php if (!empty($desmob['duracao_segundos'])): ?>
+                                                        <?php
+                                                        $horas = floor($desmob['duracao_segundos'] / 3600);
+                                                        $minutos = floor(($desmob['duracao_segundos'] % 3600) / 60);
+                                                        echo sprintf("%02d:%02d", $horas, $minutos);
+                                                        ?>
+                                                    <?php else: ?>
+                                                        -
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?php echo htmlspecialchars($desmob['status']); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted">Nenhuma desmobilização encontrada no período selecionado.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php else: ?>
             <div class="alert info">
                 <p><i class="fas fa-info-circle"></i> Selecione um período e clique em "Filtrar" para visualizar os relatórios.</p>
