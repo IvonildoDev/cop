@@ -695,39 +695,31 @@ if ($exportPDF) {
 ?>
 
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatórios</title>
+    <title>Relatórios - Controle OP</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Estilos específicos de relatórios -->
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="hamburger">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-        <ul class="nav-menu">
-            <li><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
-            <li><a href="deslocamento.php"><i class="fas fa-route"></i> Deslocamento</a></li>
-            <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
-            <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
-            <li><a href="refeicao.php"><i class="fas fa-utensils"></i> Refeições</a></li>
-            <!-- <li><a href="relatorio.php" class="active"><i class="fas fa-chart-bar"></i> Relatórios</a></li> -->
-            <li><a href="config_inicial.php"><i class="fas fa-cog"></i> Configurações</a></li>
-        </ul>
-    </nav>
+    <?php include 'includes/sidebar.php'; ?>
 
-    <div class="container">
-        <div class="title-with-icon">
-            <i class="fas fa-chart-bar"></i>
-            <h1>Relatórios</h1>
-        </div>
+    <div class="main-content">
+        <?php if (isset($success) && $success): ?>
+            <p class="success"><?php echo $success; ?></p>
+        <?php endif; ?>
+
+        <?php if (isset($error) && $error): ?>
+            <p class="error"><?php echo $error; ?></p>
+        <?php endif; ?>
+
+        <h1>Relatórios</h1>
 
         <form method="GET" action="">
             <div class="form-row">
@@ -1055,99 +1047,107 @@ if ($exportPDF) {
                 <?php endif; ?>
             <?php endif; ?>
 
+            <!-- Para mobilizações -->
             <?php if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'mobilizacoes'): ?>
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Mobilizações</h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if (!empty($mobilizacoes)): ?>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Data/Hora Início</th>
-                                            <th>Local</th>
-                                            <th>Data/Hora Fim</th>
-                                            <th>Duração</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($mobilizacoes as $mob): ?>
-                                            <tr>
-                                                <td><?php echo date('d/m/Y H:i', strtotime($mob['inicio_mobilizacao'])); ?></td>
-                                                <td><?php echo htmlspecialchars($mob['local_mobilizacao']); ?></td>
-                                                <td><?php echo !empty($mob['fim_mobilizacao']) ? date('d/m/Y H:i', strtotime($mob['fim_mobilizacao'])) : 'Em andamento'; ?></td>
-                                                <td>
-                                                    <?php if (!empty($mob['duracao_segundos'])): ?>
-                                                        <?php
-                                                        $horas = floor($mob['duracao_segundos'] / 3600);
-                                                        $minutos = floor(($mob['duracao_segundos'] % 3600) / 60);
-                                                        echo sprintf("%02d:%02d", $horas, $minutos);
-                                                        ?>
-                                                    <?php else: ?>
-                                                        -
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td><?php echo htmlspecialchars($mob['status']); ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <p class="text-muted">Nenhuma mobilização encontrada no período selecionado.</p>
-                        <?php endif; ?>
-                    </div>
+                <div class="titulo-secao mobilizacao">
+                    <i class="fas fa-truck-moving"></i>
+                    <span>Mobilizações</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="tabela-mob-desmob">
+                        <thead>
+                            <tr>
+                                <th class="col-datetime">Data/Hora Início</th>
+                                <th class="col-local">Local</th>
+                                <th class="col-datetime">Data/Hora Fim</th>
+                                <th class="col-duration">Duração</th>
+                                <th class="col-status">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($mobilizacoes) > 0): ?>
+                                <?php foreach ($mobilizacoes as $mob): ?>
+                                    <tr>
+                                        <td><?php echo date('d/m/Y H:i', strtotime($mob['inicio_mobilizacao'])); ?></td>
+                                        <td><?php echo htmlspecialchars($mob['local_mobilizacao']); ?></td>
+                                        <td><?php echo !empty($mob['fim_mobilizacao']) ? date('d/m/Y H:i', strtotime($mob['fim_mobilizacao'])) : 'Em andamento'; ?></td>
+                                        <td class="col-duration" style="text-align: center; font-family: monospace;">
+                                            <?php if (!empty($mob['duracao_segundos'])): ?>
+                                                <?php
+                                                $horas = floor($mob['duracao_segundos'] / 3600);
+                                                $minutos = floor(($mob['duracao_segundos'] % 3600) / 60);
+                                                echo sprintf("%02d:%02d", $horas, $minutos);
+                                                ?>
+                                            <?php else: ?>
+                                                -
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span class="status <?php echo $mob['status'] === 'Concluída' ? 'status-finalizado' : 'status-ativo'; ?>">
+                                                <?php echo htmlspecialchars($mob['status']); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: #999;">Nenhuma mobilização encontrada no período selecionado.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             <?php endif; ?>
 
+            <!-- Para desmobilizações -->
             <?php if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'desmobilizacoes'): ?>
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Desmobilizações</h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if (!empty($desmobilizacoes)): ?>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Data/Hora Início</th>
-                                            <th>Local</th>
-                                            <th>Data/Hora Fim</th>
-                                            <th>Duração</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($desmobilizacoes as $desmob): ?>
-                                            <tr>
-                                                <td><?php echo date('d/m/Y H:i', strtotime($desmob['inicio_desmobilizacao'])); ?></td>
-                                                <td><?php echo htmlspecialchars($desmob['local_desmobilizacao']); ?></td>
-                                                <td><?php echo !empty($desmob['fim_desmobilizacao']) ? date('d/m/Y H:i', strtotime($desmob['fim_desmobilizacao'])) : 'Em andamento'; ?></td>
-                                                <td>
-                                                    <?php if (!empty($desmob['duracao_segundos'])): ?>
-                                                        <?php
-                                                        $horas = floor($desmob['duracao_segundos'] / 3600);
-                                                        $minutos = floor(($desmob['duracao_segundos'] % 3600) / 60);
-                                                        echo sprintf("%02d:%02d", $horas, $minutos);
-                                                        ?>
-                                                    <?php else: ?>
-                                                        -
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td><?php echo htmlspecialchars($desmob['status']); ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <p class="text-muted">Nenhuma desmobilização encontrada no período selecionado.</p>
-                        <?php endif; ?>
-                    </div>
+                <div class="titulo-secao desmobilizacao">
+                    <i class="fas fa-truck"></i>
+                    <span>Desmobilizações</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="tabela-mob-desmob">
+                        <thead>
+                            <tr>
+                                <th class="col-datetime">Data/Hora Início</th>
+                                <th class="col-local">Local</th>
+                                <th class="col-datetime">Data/Hora Fim</th>
+                                <th class="col-duration">Duração</th>
+                                <th class="col-status">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($desmobilizacoes) > 0): ?>
+                                <?php foreach ($desmobilizacoes as $desmob): ?>
+                                    <tr>
+                                        <td><?php echo date('d/m/Y H:i', strtotime($desmob['inicio_desmobilizacao'])); ?></td>
+                                        <td><?php echo htmlspecialchars($desmob['local_desmobilizacao']); ?></td>
+                                        <td><?php echo !empty($desmob['fim_desmobilizacao']) ? date('d/m/Y H:i', strtotime($desmob['fim_desmobilizacao'])) : 'Em andamento'; ?></td>
+                                        <td class="col-duration" style="text-align: center; font-family: monospace;">
+                                            <?php if (!empty($desmob['duracao_segundos'])): ?>
+                                                <?php
+                                                $horas = floor($desmob['duracao_segundos'] / 3600);
+                                                $minutos = floor(($desmob['duracao_segundos'] % 3600) / 60);
+                                                echo sprintf("%02d:%02d", $horas, $minutos);
+                                                ?>
+                                            <?php else: ?>
+                                                -
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span class="status <?php echo $desmob['status'] === 'Concluída' ? 'status-finalizado' : 'status-ativo'; ?>">
+                                                <?php echo htmlspecialchars($desmob['status']); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: #999;">Nenhuma desmobilização encontrada no período selecionado.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             <?php endif; ?>
         <?php else: ?>
@@ -1157,16 +1157,8 @@ if ($exportPDF) {
         <?php endif; ?>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburger = document.querySelector(".hamburger");
-            const navMenu = document.querySelector(".nav-menu");
-
-            hamburger.addEventListener("click", function() {
-                navMenu.classList.toggle("active");
-            });
-        });
-    </script>
+    <script src="js/sidebar.js"></script>
+    <!-- Scripts específicos de relatórios -->
 </body>
 
 </html>

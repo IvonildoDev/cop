@@ -93,63 +93,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuração Inicial - Controle OP</title>
+    <title>Configurações - Controle OP</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        .config-container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 30px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .config-container h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
-        }
-
-        .config-message {
-            text-align: center;
-            margin: 20px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-    </style>
+    <!-- Estilos específicos de configurações -->
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="hamburger">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-        <ul class="nav-menu">
-            <li><a href="index.php"><i class="fas fa-home"></i> OPeração</a></li>
-            <!-- <li><a href="deslocamento.php"><i class="fas fa-route"></i> Deslocamento</a></li> -->
-            <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
-            <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
-            <li><a href="refeicao.php"><i class="fas fa-utensils"></i> Refeições</a></li>
-            <li><a href="relatorio.php"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
-            <li><a href="config_inicial.php" class="active"><i class="fas fa-cog"></i> Configurações</a></li>
-        </ul>
-    </nav>
+    <?php include 'includes/sidebar.php'; ?>
 
-    <div class="container">
+    <div class="main-content">
+        <?php if (isset($success) && $success): ?>
+            <p class="success"><?php echo $success; ?></p>
+        <?php endif; ?>
+
+        <?php if (isset($error) && $error): ?>
+            <p class="error"><?php echo $error; ?></p>
+        <?php endif; ?>
+
+        <h1>Configurações do Sistema</h1>
+
         <div class="config-container">
             <h1>Configuração Inicial do Sistema</h1>
 
@@ -184,16 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburger = document.querySelector(".hamburger");
-            const navMenu = document.querySelector(".nav-menu");
-
-            hamburger.addEventListener("click", function() {
-                navMenu.classList.toggle("active");
-            });
-        });
-    </script>
+    <script src="js/sidebar.js"></script>
+    <!-- Scripts específicos de configurações -->
 </body>
 
 </html>

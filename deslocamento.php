@@ -116,30 +116,42 @@ $error = isset($error) ? $error : (isset($_GET['error']) ? htmlspecialchars($_GE
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Deslocamento</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 
 <body>
-    <nav class="navbar"></nav>
-    <div class="hamburger">
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.php" class="sidebar-logo">
+                <i class="fas fa-truck-moving"></i>
+                <span>COP</span>
+            </a>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="index.php"><i class="fas fa-home"></i> Operação</a></li>
+            <li><a href="mobilizacao.php"><i class="fas fa-truck-loading"></i> Mobilização</a></li>
+            <li><a href="desmobilizacao.php"><i class="fas fa-truck"></i> Desmobilização</a></li>
+            <li><a href="deslocamento.php" class="active"><i class="fas fa-route"></i> Deslocamento</a></li>
+            <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
+            <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
+            <li><a href="refeicao.php"><i class="fas fa-utensils"></i> Refeições</a></li>
+            <li><a href="relatorio.php"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+            <li><a href="config_inicial.php"><i class="fas fa-cog"></i> Configurações</a></li>
+        </ul>
     </div>
-    <ul class="nav-menu">
-        <li><a href="index.php" class="active"><i class="fas fa-home"></i> Operação</a></li>
-        <li><a href="mobilizacao.php"><i class="fas fa-truck-loading"></i> Mobilização</a></li>
-        <li><a href="desmobilizacao.php"><i class="fas fa-truck"></i> Desmobilização</a></li>
-        <li><a href="deslocamento.php"><i class="fas fa-route"></i> Deslocamento</a></li>
-        <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
-        <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
-        <li><a href="refeicao.php"><i class="fas fa-utensils"></i> Refeições</a></li>
-        <li><a href="relatorio.php"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
-        <li><a href="config_inicial.php"><i class="fas fa-cog"></i> Configurações</a></li>
-    </ul>
-    </nav>
 
-    <div class="container">
+    <!-- Overlay para dispositivos móveis -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Botão de toggle para dispositivos móveis -->
+    <button class="sidebar-toggle" id="sidebar-toggle">
+        <i class="fas fa-bars" id="sidebar-toggle-icon"></i>
+    </button>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
         <?php if ($success): ?>
             <p class="success"><?php echo $success; ?></p>
         <?php endif; ?>
@@ -282,27 +294,7 @@ $error = isset($error) ? $error : (isset($_GET['error']) ? htmlspecialchars($_GE
         <?php endif; ?>
     </div>
 
-    <script>
-        // Adicionar o JavaScript para o menu hamburger
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburger = document.querySelector(".hamburger");
-            const navMenu = document.querySelector(".nav-menu");
-
-            hamburger.addEventListener("click", function() {
-                navMenu.classList.toggle("active");
-            });
-
-            // Adicionar data e hora atual ao campo de início quando o botão é clicado
-            const btnMarcarInicio = document.getElementById("marcarInicio");
-            if (btnMarcarInicio) {
-                btnMarcarInicio.addEventListener("click", function() {
-                    const now = new Date();
-                    const dataFormatada = now.toISOString().slice(0, 16);
-                    document.getElementById("inicioOperacao").value = dataFormatada;
-                });
-            }
-        });
-    </script>
+    <script src="js/sidebar.js"></script>
 </body>
 
 </html>

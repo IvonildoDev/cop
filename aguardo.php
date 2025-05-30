@@ -134,44 +134,28 @@ $error = isset($error) ? $error : (isset($_GET['error']) ? htmlspecialchars($_GE
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Aguardos</title>
+    <title>Aguardos - Controle OP</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Estilos específicos de aguardo -->
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="hamburger">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-        <ul class="nav-menu">
-            <li><a href="index.php" class="active"><i class="fas fa-home"></i> Operação</a></li>
-            <li><a href="mobilizacao.php"><i class="fas fa-truck-loading"></i> Mobilização</a></li>
-            <li><a href="desmobilizacao.php"><i class="fas fa-truck"></i> Desmobilização</a></li>
-            <li><a href="deslocamento.php"><i class="fas fa-route"></i> Deslocamento</a></li>
-            <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
-            <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
-            <li><a href="refeicao.php"><i class="fas fa-utensils"></i> Refeições</a></li>
-            <li><a href="relatorio.php"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
-            <li><a href="config_inicial.php"><i class="fas fa-cog"></i> Configurações</a></li>
-        </ul>
-    </nav>
+    <?php include 'includes/sidebar.php'; ?>
 
-    <div class="container">
-        <?php if ($success): ?>
-            <p class="alert success"><?php echo $success; ?></p>
+    <div class="main-content">
+        <?php if (isset($success) && $success): ?>
+            <p class="success"><?php echo $success; ?></p>
         <?php endif; ?>
 
-        <?php if ($error): ?>
-            <p class="alert error"><?php echo $error; ?></p>
+        <?php if (isset($error) && $error): ?>
+            <p class="error"><?php echo $error; ?></p>
         <?php endif; ?>
 
-        <div class="title-with-icon">
-            <i class="fas fa-pause-circle"></i>
-            <h1>Controle de Aguardos</h1>
-        </div>
+        <h1>Controle de Aguardos</h1>
+
+        <!-- Conteúdo específico da página de aguardos -->
 
         <!-- Informações do cabeçalho -->
         <div class="header-info">
@@ -280,6 +264,8 @@ $error = isset($error) ? $error : (isset($_GET['error']) ? htmlspecialchars($_GE
         <?php endif; ?>
     </div>
 
+    <script src="js/sidebar.js"></script>
+    <!-- Scripts específicos de aguardo -->
     <script>
         // Adicionar o JavaScript para o menu hamburger
         document.addEventListener('DOMContentLoaded', function() {

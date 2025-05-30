@@ -1,6 +1,9 @@
 <?php
 require_once 'config.php';
 
+// Configurar fuso horário para Brasil
+date_default_timezone_set('America/Sao_Paulo');
+
 // Carregar as configurações do sistema
 try {
     $stmt = $pdo->query("SELECT * FROM configuracoes LIMIT 1");
@@ -36,8 +39,9 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobilização do Equipamento - Controle OP</title>
+    <title>Mobilização - Controle OP</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         .header-info {
@@ -236,26 +240,9 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="hamburger">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-        <ul class="nav-menu">
-            <li><a href="index.php"><i class="fas fa-home"></i> Operação</a></li>
-            <li><a href="mobilizacao.php" class="active"><i class="fas fa-truck-loading"></i> Mobilização</a></li>
-            <li><a href="desmobilizacao.php"><i class="fas fa-truck"></i> Desmobilização</a></li>
-            <li><a href="deslocamento.php"><i class="fas fa-route"></i> Deslocamento</a></li>
-            <li><a href="aguardo.php"><i class="fas fa-pause-circle"></i> Aguardos</a></li>
-            <li><a href="abastecimento.php"><i class="fas fa-gas-pump"></i> Abastecimento</a></li>
-            <li><a href="refeicao.php"><i class="fas fa-utensils"></i> Refeições</a></li>
-            <li><a href="relatorio.php"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
-            <li><a href="config_inicial.php"><i class="fas fa-cog"></i> Configurações</a></li>
-        </ul>
-    </nav>
+    <?php include 'includes/sidebar.php'; ?>
 
-    <div class="container">
+    <div class="main-content">
         <?php if ($success): ?>
             <p class="success"><?php echo $success; ?></p>
         <?php endif; ?>
@@ -428,43 +415,8 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
 
             return true;
         });
-
-        // Menu hamburger
-        document.querySelector('.hamburger').addEventListener('click', function() {
-            document.querySelector('.nav-menu').classList.toggle('active');
-        });
     </script>
+    <script src="js/sidebar.js"></script>
 </body>
 
 </html>
-<?php
-// Para mobilizações
-foreach ($mobilizacoes as $index => $mob) {
-    $pdf->Cell(40, 6, 'Início:', 1, 0, 'L');
-    $inicio_data = new DateTime($mob['inicio_mobilizacao']);
-    $pdf->Cell(0, 6, $inicio_data->format('d/m/Y H:i'), 1, 1, 'L');
-
-    $pdf->Cell(40, 6, 'Fim:', 1, 0, 'L');
-    if (!empty($mob['fim_mobilizacao'])) {
-        $fim_data = new DateTime($mob['fim_mobilizacao']);
-        $pdf->Cell(0, 6, $fim_data->format('d/m/Y H:i'), 1, 1, 'L');
-    } else {
-        $pdf->Cell(0, 6, 'Em andamento', 1, 1, 'L');
-    }
-}
-
-// Para desmobilizações
-foreach ($desmobilizacoes as $index => $desmob) {
-    $pdf->Cell(40, 6, 'Início:', 1, 0, 'L');
-    $inicio_data = new DateTime($desmob['inicio_desmobilizacao']);
-    $pdf->Cell(0, 6, $inicio_data->format('d/m/Y H:i'), 1, 1, 'L');
-
-    $pdf->Cell(40, 6, 'Fim:', 1, 0, 'L');
-    if (!empty($desmob['fim_desmobilizacao'])) {
-        $fim_data = new DateTime($desmob['fim_desmobilizacao']);
-        $pdf->Cell(0, 6, $fim_data->format('d/m/Y H:i'), 1, 1, 'L');
-    } else {
-        $pdf->Cell(0, 6, 'Em andamento', 1, 1, 'L');
-    }
-}
-?>

@@ -5,6 +5,16 @@ date_default_timezone_set('America/Sao_Paulo');
 require_once 'vendor/autoload.php';
 require_once 'config.php';
 
+// Definir período do relatório
+// Se receber datas via GET, use-as, caso contrário, use últimos 30 dias
+if (isset($_GET['dataInicio']) && isset($_GET['dataFim'])) {
+    $dataInicio = new DateTime($_GET['dataInicio']);
+    $dataFim = new DateTime($_GET['dataFim']);
+} else {
+    $dataFim = new DateTime(); // Hoje
+    $dataInicio = new DateTime('-30 days'); // 30 dias atrás
+}
+
 // Carregar configurações
 try {
     $stmt = $pdo->query("SELECT * FROM configuracoes LIMIT 1");
@@ -94,7 +104,13 @@ $pdf->Ln(5);
 
 // Get operations from the database
 try {
-    $stmt = $pdo->query("SELECT * FROM operacoes ORDER BY created_at DESC");
+    $stmt = $pdo->prepare("SELECT * FROM operacoes 
+                          WHERE created_at BETWEEN :dataInicio AND :dataFim 
+                          ORDER BY created_at DESC");
+    $stmt->execute([
+        ':dataInicio' => $dataInicio->format('Y-m-d 00:00:00'),
+        ':dataFim' => $dataFim->format('Y-m-d 23:59:59')
+    ]);
     $operacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Set font for content
@@ -180,7 +196,13 @@ $pdf->Ln(5);
 
 // Get deslocamentos from the database
 try {
-    $stmt = $pdo->query("SELECT * FROM deslocamentos ORDER BY inicio_deslocamento DESC");
+    $stmt = $pdo->prepare("SELECT * FROM deslocamentos 
+                          WHERE created_at BETWEEN :dataInicio AND :dataFim 
+                          ORDER BY inicio_deslocamento DESC");
+    $stmt->execute([
+        ':dataInicio' => $dataInicio->format('Y-m-d 00:00:00'),
+        ':dataFim' => $dataFim->format('Y-m-d 23:59:59')
+    ]);
     $deslocamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Set font for content
@@ -244,7 +266,13 @@ $pdf->Ln(5);
 
 // Get abastecimentos from the database
 try {
-    $stmt = $pdo->query("SELECT * FROM abastecimentos ORDER BY inicio_abastecimento DESC");
+    $stmt = $pdo->prepare("SELECT * FROM abastecimentos 
+                          WHERE created_at BETWEEN :dataInicio AND :dataFim 
+                          ORDER BY inicio_abastecimento DESC");
+    $stmt->execute([
+        ':dataInicio' => $dataInicio->format('Y-m-d 00:00:00'),
+        ':dataFim' => $dataFim->format('Y-m-d 23:59:59')
+    ]);
     $abastecimentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Set font for content
@@ -302,6 +330,27 @@ try {
 }
 
 // ----- MOBILIZAÇÕES -----
+$tipoRelatorio = isset($_GET['tipo']) ? $_GET['tipo'] : 'completo';
+
+// Buscar mobilizações
+try {
+    $stmt = $pdo->prepare("SELECT m.*, DATE_FORMAT(m.inicio_mobilizacao, '%d/%m/%Y %H:%i') as inicio_formatado, 
+                           DATE_FORMAT(m.fim_mobilizacao, '%d/%m/%Y %H:%i') as fim_formatado 
+                           FROM mobilizacoes m 
+                           WHERE m.created_at BETWEEN :dataInicio AND :dataFim 
+                           ORDER BY m.inicio_mobilizacao");
+    
+    $stmt->execute([
+        ':dataInicio' => $dataInicio->format('Y-m-d 00:00:00'),
+        ':dataFim' => $dataFim->format('Y-m-d 23:59:59')
+    ]);
+    
+    $mobilizacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Em caso de erro, inicializa como array vazio
+    $mobilizacoes = [];
+}
+
 if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'mobilizacoes') {
     // Verificar se precisa adicionar uma nova página
     if ($pdf->getY() > 180 && $tipoRelatorio == 'todos') {
@@ -350,6 +399,26 @@ if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'mobilizacoes') {
 }
 
 // ----- DESMOBILIZAÇÕES -----
+$tipoRelatorio = isset($_GET['tipo']) ? $_GET['tipo'] : 'completo';
+
+// Buscar desmobilizações
+try {
+    $stmt = $pdo->prepare("SELECT d.*, DATE_FORMAT(d.inicio_desmobilizacao, '%d/%m/%Y %H:%i') as inicio_formatado, 
+                           DATE_FORMAT(d.fim_desmobilizacao, '%d/%m/%Y %H:%i') as fim_formatado 
+                           FROM desmobilizacoes d 
+                           WHERE d.created_at BETWEEN :dataInicio AND :dataFim 
+                           ORDER BY d.inicio_desmobilizacao");
+    
+    $stmt->execute([
+        ':dataInicio' => $dataInicio->format('Y-m-d 00:00:00'),
+        ':dataFim' => $dataFim->format('Y-m-d 23:59:59')
+    ]);
+    
+    $desmobilizacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $desmobilizacoes = [];
+}
+
 if ($tipoRelatorio == 'todos' || $tipoRelatorio == 'desmobilizacoes') {
     // Verificar se precisa adicionar uma nova página
     if ($pdf->getY() > 180 && $tipoRelatorio == 'todos') {
@@ -407,7 +476,14 @@ $pdf->Cell(0, 7, 'Operações', 1, 1, 'L', true);
 $pdf->SetFont('helvetica', '', 10);
 
 try {
-    $stmt = $pdo->query("SELECT COUNT(*) as total_operacoes, SUM(volume_bbl) as total_volume FROM operacoes");
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total_operacoes, 
+                          SUM(volume_bbl) as total_volume 
+                          FROM operacoes 
+                          WHERE created_at BETWEEN :dataInicio AND :dataFim");
+    $stmt->execute([
+        ':dataInicio' => $dataInicio->format('Y-m-d 00:00:00'),
+        ':dataFim' => $dataFim->format('Y-m-d 23:59:59')
+    ]);
     $estatisticas = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $pdf->Cell(100, 6, 'Total de operações:', 1, 0, 'L');
@@ -436,9 +512,9 @@ if (count($deslocamentos) > 0) {
 
 $pdf->Cell(0, 7, 'Mobilizações', 1, 1, 'L', true);
 $pdf->Cell(100, 6, 'Total de mobilizações:', 1, 0, 'L');
-$pdf->Cell(0, 6, count($mobilizacoes), 1, 1, 'L');
+$pdf->Cell(0, 6, isset($mobilizacoes) ? count($mobilizacoes) : 0, 1, 1, 'L');
 
-if (count($mobilizacoes) > 0) {
+if (isset($mobilizacoes) && count($mobilizacoes) > 0) {
     $tempoTotalMobilizacoes = 0;
     foreach ($mobilizacoes as $mob) {
         if (!empty($mob['duracao_segundos'])) {
@@ -455,9 +531,9 @@ if (count($mobilizacoes) > 0) {
 // Estatísticas de desmobilizações
 $pdf->Cell(0, 7, 'Desmobilizações', 1, 1, 'L', true);
 $pdf->Cell(100, 6, 'Total de desmobilizações:', 1, 0, 'L');
-$pdf->Cell(0, 6, count($desmobilizacoes), 1, 1, 'L');
+$pdf->Cell(0, 6, isset($desmobilizacoes) ? count($desmobilizacoes) : 0, 1, 1, 'L');
 
-if (count($desmobilizacoes) > 0) {
+if (isset($desmobilizacoes) && count($desmobilizacoes) > 0) {
     $tempoTotalDesmobilizacoes = 0;
     foreach ($desmobilizacoes as $desmob) {
         if (!empty($desmob['duracao_segundos'])) {
@@ -470,6 +546,11 @@ if (count($desmobilizacoes) > 0) {
     $pdf->Cell(100, 6, 'Tempo total em desmobilização:', 1, 0, 'L');
     $pdf->Cell(0, 6, sprintf("%02d:%02d", $horasDesmob, $minutosDesmob), 1, 1, 'L');
 }
+
+// No cabeçalho do PDF ou no início do relatório
+$pdf->SetFont('helvetica', '', 10);
+$pdf->Cell(0, 6, 'Período: ' . $dataInicio->format('d/m/Y') . ' a ' . $dataFim->format('d/m/Y'), 0, 1, 'R');
+$pdf->Ln(5);
 
 // Output the PDF
 $pdf->Output('historico_operacoes.pdf', 'I'); // 'I' displays inline in browser

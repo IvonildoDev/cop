@@ -195,5 +195,88 @@ function registrarAguardo(acao, motivo = "") {
         });
 }
 
-// Manter as outras funções existentes do aguardo...
-// (código existente para controle de aguardos)
+// Adicione este script ao final da página abastecimento.php
+document.addEventListener('DOMContentLoaded', function() {
+    // Referência aos elementos
+    const tipoAguaRadio = document.getElementById('agua');
+    const tipoCombustivelRadio = document.getElementById('combustivel');
+    const iniciarButton = document.getElementById('inicioAbastecimento');
+    const radioOptions = document.querySelectorAll('.radio-option');
+    
+    // Função para verificar se um tipo foi selecionado
+    function checkTipoSelecionado() {
+        if (tipoAguaRadio.checked || tipoCombustivelRadio.checked) {
+            iniciarButton.disabled = false;
+        } else {
+            iniciarButton.disabled = true;
+        }
+    }
+    
+    // Adicionar eventos aos radio buttons
+    tipoAguaRadio.addEventListener('change', function() {
+        checkTipoSelecionado();
+        // Destacar visualmente a opção selecionada
+        radioOptions.forEach(option => {
+            option.classList.remove('selected');
+        });
+        tipoAguaRadio.closest('.radio-option').classList.add('selected');
+    });
+    
+    tipoCombustivelRadio.addEventListener('change', function() {
+        checkTipoSelecionado();
+        // Destacar visualmente a opção selecionada
+        radioOptions.forEach(option => {
+            option.classList.remove('selected');
+        });
+        tipoCombustivelRadio.closest('.radio-option').classList.add('selected');
+    });
+    
+    // Adicionar evento de clique às div's da opção para melhorar a experiência do usuário
+    radioOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Disparar o evento change manualmente
+            const event = new Event('change');
+            radio.dispatchEvent(event);
+        });
+    });
+    
+    // Verificar o estado inicial
+    checkTipoSelecionado();
+    
+    // Garantir que o botão de início está funcionando
+    iniciarButton.addEventListener('click', function() {
+        if (tipoAguaRadio.checked || tipoCombustivelRadio.checked) {
+            // Registrar o início do abastecimento
+            const now = new Date();
+            document.getElementById('inicioAbastecimentoTimestamp').value = now.getTime();
+            document.getElementById('abastecimentoInicio').value = now.toISOString();
+            
+            // Atualizar interface
+            this.disabled = true;
+            document.getElementById('fimAbastecimento').disabled = false;
+            
+            const statusIcon = document.getElementById('statusAbastecimentoIcon');
+            const statusText = document.getElementById('statusAbastecimento');
+            statusIcon.className = 'fas fa-gas-pump fa-spin status-ativo';
+            
+            if (tipoAguaRadio.checked) {
+                statusText.textContent = 'Abastecimento de água em andamento';
+                document.getElementById('tipoAbastecimentoHidden').value = 'agua';
+            } else {
+                statusText.textContent = 'Abastecimento de combustível em andamento';
+                document.getElementById('tipoAbastecimentoHidden').value = 'combustivel';
+            }
+            
+            // Iniciar o cronômetro
+            timerAbastecimento = setInterval(function() {
+                segundosAbastecimento++;
+                document.getElementById('tempoAbastecimento').textContent = 'Tempo: ' + formatarTempo(segundosAbastecimento);
+            }, 1000);
+            
+            document.getElementById('abastecimentoStatus').value = 'Em andamento';
+        }
+    });
+});
